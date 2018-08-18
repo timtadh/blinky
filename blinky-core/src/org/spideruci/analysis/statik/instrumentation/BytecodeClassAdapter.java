@@ -9,7 +9,6 @@ import org.objectweb.asm.Opcodes;
 import org.spideruci.analysis.dynamic.Profiler;
 import org.spideruci.analysis.trace.EventBuilder;
 import org.spideruci.analysis.trace.MethodDecl;
-import org.spideruci.analysis.trace.TraceEvent;
 
 public class BytecodeClassAdapter extends ClassVisitor {
   private String className;
@@ -19,31 +18,29 @@ public class BytecodeClassAdapter extends ClassVisitor {
     super(Opcodes.ASM5, cv);
     this.className = className;
   }
-  
+
   @Override
   public void visitSource(String source, String debug) {
     super.visitSource(source, debug);
     final String packageName = className.substring(0, className.lastIndexOf('/'));
     this.sourceName = packageName + "/" + source;
   }
-  
+
   @Override
-  public MethodVisitor visitMethod(int access, String name, String desc, 
-      String signature, String[] exceptions) {
+  public MethodVisitor visitMethod(
+      int access, String name, String desc, String signature, String[] exceptions) {
     MethodVisitor mv;
-    
+
     mv = cv.visitMethod(access, name, desc, signature, exceptions);
-    
-    if (mv != null 
-        && ((access & Opcodes.ACC_NATIVE) == 0)) {
-      
+
+    if (mv != null && ((access & Opcodes.ACC_NATIVE) == 0)) {
+
       final String methodName = name + desc;
-      
-      MethodDecl methodDecl = 
+
+      MethodDecl methodDecl =
           EventBuilder.buildMethodDecl(
-              Profiler.useSourcefileName ? sourceName : className, 
-              access, methodName);
-      
+              Profiler.useSourcefileName ? sourceName : className, access, methodName);
+
       mv = new BytecodeMethodAdapter(methodDecl, access, name, desc, mv);
       if (log) {
         REAL_OUT.println(methodDecl.getLog());
